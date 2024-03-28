@@ -38,15 +38,25 @@ class App extends Component<{}, IState> {
     }
   }
 
-  /**
-   * Get new data from server and update the state with the new data
-   */
+
+//Continuous data streaming from the server
   getDataFromServer() {
-    DataStreamer.getData((serverResponds: ServerRespond[]) => {
-      // Update the state by creating a new array of data that consists of
-      // Previous data in the state and the new data from server
-      this.setState({ data: [...this.state.data, ...serverResponds] });
-    });
+    let intervalId: NodeJS.Timeout;
+    const stopStreaming = () => {
+      clearInterval(intervalId);
+    };
+
+    intervalId = setInterval(() => {
+      DataStreamer.getData((serverResponds: ServerRespond[]) => {
+        if (serverResponds.length === 0) {
+          stopStreaming();
+        } else {
+          this.setState({ data: [...this.state.data, ...serverResponds] });
+        }
+      });
+    }, 100);
+
+    window.addEventListener('beforeunload', stopStreaming);
   }
 
   /**
